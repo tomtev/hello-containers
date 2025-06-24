@@ -1,59 +1,71 @@
-# Containers Starter
+# WordPress + SQLite Docker Container
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/containers-template)
+This project provides a Docker setup for running WordPress with SQLite instead of MySQL, based on the approach from [soulteary/docker-sqlite-wordpress](https://github.com/soulteary/docker-sqlite-wordpress).
 
-![Containers Template Preview](https://imagedelivery.net/_yJ02hpOMj_EnGvsU2aygw/5aba1fb7-b937-46fd-fa67-138221082200/public)
+## Features
 
-<!-- dash-content-start -->
+- WordPress with SQLite database (no MySQL required)
+- Based on official WordPress Docker image
+- Uses the official [SQLite Database Integration](https://wordpress.org/plugins/sqlite-database-integration/) plugin
+- Lightweight and portable - entire database stored in a single file
+- Perfect for development, testing, or small production sites
 
-This is a [Container](https://developers.cloudflare.com/containers/) starter template.
+## Quick Start
 
-It demonstrates basic Container coniguration, launching and routing to individual container, load balancing over multiple container, running basic hooks on container status changes.
+### Using Docker Compose (Recommended)
 
-<!-- dash-content-end -->
-
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
-
+1. Clone this repository:
 ```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/containers-template
+git clone <your-repo-url>
+cd <your-repo-name>
 ```
 
-## Getting Started
-
-First, run:
-
+2. Start the container:
 ```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-# or
-bun install
+docker compose up -d
 ```
 
-Then run the development server (using the package manager of your choice):
+3. Access WordPress at http://localhost:8080 and complete the installation wizard.
+
+### Using Docker CLI
 
 ```bash
-npm run dev
+# Build the image
+docker build -t wordpress-sqlite .
+
+# Run the container
+docker run -d -p 8080:80 -v $(pwd)/wp-content:/var/www/html/wp-content wordpress-sqlite
 ```
 
-Open [http://localhost:8787](http://localhost:8787) with your browser to see the result.
+## Configuration
 
-You can start editing your Worker by modifying `src/index.ts` and you can start
-editing your Container by editing the content of `container_src`.
+### Database Location
 
-## Deploying To Production
+By default, the SQLite database is stored at `/var/www/html/wp-content/database/.ht.sqlite`. This location is persisted via the volume mount.
 
-| Command          | Action                                |
-| :--------------- | :------------------------------------ |
-| `npm run deploy` | Deploy your application to Cloudflare |
+### Ports
 
-## Learn More
+The container exposes port 80 internally, which is mapped to port 8080 on your host by default. You can change this in the `docker-compose.yml` file.
 
-To learn more about Containers, take a look at the following resources:
+### Volumes
 
-- [Container Documentation](https://developers.cloudflare.com/containers/) - learn about Containers
-- [Container Class](https://github.com/cloudflare/containers) - learn about the Container helper class
+- `wordpress_data`: Stores the WordPress core files
+- `./wp-content`: Mounted to persist your themes, plugins, uploads, and SQLite database
 
-Your feedback and contributions are welcome!
+## Production Considerations
+
+While SQLite works well for many use cases, consider the following:
+
+- SQLite is best suited for sites with moderate traffic
+- For high-traffic sites or sites requiring advanced database features, MySQL/MariaDB may be more appropriate
+- Always backup your database file regularly
+
+## Credits
+
+This implementation is based on:
+- [soulteary/docker-sqlite-wordpress](https://github.com/soulteary/docker-sqlite-wordpress)
+- [WordPress SQLite Database Integration Plugin](https://wordpress.org/plugins/sqlite-database-integration/)
+
+## License
+
+This project follows the same licensing as WordPress (GPL v2 or later).

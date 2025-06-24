@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  wordpress:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DEBUG: 'true'
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+    restart: unless-stopped
+
+volumes:
+  wordpress_data: 

@@ -1,0 +1,17 @@
+# WordPress files
+wp-content/
+wordpress_data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker volumes
+volumes/ 
+/node_modules

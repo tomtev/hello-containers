@@ -1,32 +1,16 @@
 # syntax=docker/dockerfile:1
 
-FROM wordpress:latest
+FROM node:20-alpine
 
-# Install SQLite3 and required PHP extensions
-RUN apt-get update && \
-    apt-get install -y sqlite3 libsqlite3-dev unzip && \
-    docker-php-ext-install pdo_sqlite && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-# Download and install the SQLite Database Integration plugin
-RUN curl -L https://downloads.wordpress.org/plugin/sqlite-database-integration.2.2.2.zip -o sqlite-plugin.zip && \
-    unzip sqlite-plugin.zip -d /usr/src/wordpress/wp-content/plugins/ && \
-    rm sqlite-plugin.zip
+# Create files using printf to avoid heredoc issues
+RUN printf '{\n  "name": "wp-wasm-demo",\n  "version": "1.0.0",\n  "type": "module",\n  "dependencies": {\n    "express": "^4.18.2"\n  }\n}' > package.json
 
-# Copy the db.php drop-in file to enable SQLite
-RUN cp /usr/src/wordpress/wp-content/plugins/sqlite-database-integration/db.copy \
-       /usr/src/wordpress/wp-content/db.php
+RUN printf 'import express from "express";\n\nconst app = express();\nconst port = 8080;\n\napp.get("/", (req, res) => {\n  res.send("<h1>WordPress WASM Demo Server</h1><p>Server is running on port " + port + "</p>");\n});\n\napp.get("/info", (req, res) => {\n  res.json({\n    message: "WordPress WASM Demo Server",\n    platform: "Cloudflare Workers Compatible",\n    port: port\n  });\n});\n\napp.listen(port, "0.0.0.0", () => {\n  console.log("Server listening on port " + port);\n});' > server.js
 
-# Create the database directory
-RUN mkdir -p /usr/src/wordpress/wp-content/database && \
-    chown -R www-data:www-data /usr/src/wordpress/wp-content/database
+RUN npm install
 
-# Set proper permissions
-RUN chown -R www-data:www-data /usr/src/wordpress/wp-content
+EXPOSE 8080
 
-# Expose port 80 for the web server
-EXPOSE 80
-
-# Use the default WordPress entrypoint and CMD
-ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["apache2-foreground"]
+CMD ["node", "server.js"]

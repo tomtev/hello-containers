@@ -249,6 +249,7 @@ app.all("/wordpress/:id", async (c) => {
   return response;
 });
 
+// This now catches ALL paths under /wordpress/:id including pretty permalinks
 app.all("/wordpress/:id/*", async (c) => {
   const id = c.req.param("id");
   const container = getContainer(c.env.MY_CONTAINER, id);
@@ -292,7 +293,11 @@ app.all("/wordpress/:id/*", async (c) => {
   const response = await container.fetch(newRequest);
   
   console.log(`Container response status: ${response.status}`);
-  console.log(`Container response headers:`, Object.fromEntries(response.headers.entries()));
+  
+  // Log response headers for debugging
+  if (response.status !== 200) {
+    console.log(`Container response headers:`, Object.fromEntries(response.headers.entries()));
+  }
   
   // Handle redirects manually
   if (response.status >= 300 && response.status < 400) {

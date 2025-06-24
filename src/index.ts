@@ -5,23 +5,23 @@ export class MyContainer extends Container {
   // Port the container listens on (default: 8080)
   defaultPort = 8080;
   // Time before container sleeps due to inactivity (default: 30s)
-  sleepAfter = "2m";
+  sleepAfter = "5m";
   // Environment variables passed to the container
   envVars = {
-    MESSAGE: "I was passed in via the container class!",
+    MESSAGE: "WordPress with SQLite",
   };
 
   // Optional lifecycle hooks
   override onStart() {
-    console.log("Container successfully started");
+    console.log("WordPress container successfully started");
   }
 
   override onStop() {
-    console.log("Container successfully shut down");
+    console.log("WordPress container successfully shut down");
   }
 
   override onError(error: unknown) {
-    console.log("Container error:", error);
+    console.log("WordPress container error:", error);
   }
 }
 
@@ -33,38 +33,54 @@ const app = new Hono<{
 // Home route with available endpoints
 app.get("/", (c) => {
   return c.text(
-    "Available endpoints:\n" +
-      "GET /container/<ID> - Start a container for each ID with a 2m timeout\n" +
-      "GET /lb - Load balance requests over multiple containers\n" +
-      "GET /error - Start a container that errors (demonstrates error handling)\n" +
-      "GET /singleton - Get a single specific container instance",
+    "WordPress + SQLite on Cloudflare Containers\n\n" +
+      "Available endpoints:\n" +
+      "GET /wordpress/<ID> - Start a WordPress instance for each ID\n" +
+      "GET /wp - Single WordPress instance\n" +
+      "\nNote: Each container instance starts fresh. Data doesn't persist between restarts.",
   );
 });
 
-// Route requests to a specific container using the container ID
-app.get("/container/:id", async (c) => {
+// Route requests to a specific WordPress container using the container ID
+// This proxies ALL WordPress paths correctly
+app.all("/wordpress/:id/*", async (c) => {
   const id = c.req.param("id");
-  const containerId = c.env.MY_CONTAINER.idFromName(`/container/${id}`);
-  const container = c.env.MY_CONTAINER.get(containerId);
-  return await container.fetch(c.req.raw);
+  const container = getContainer(c.env.MY_CONTAINER, id);
+  
+  // Get the path after /wordpress/:id
+  const path = c.req.path.replace(`/wordpress/${id}`, '') || '/';
+  
+  // Create a new request with the correct path for WordPress
+  const url = new URL(c.req.url);
+  url.pathname = path;
+  
+  const newRequest = new Request(url.toString(), {
+    method: c.req.method,
+    headers: c.req.raw.headers,
+    body: c.req.raw.body,
+  });
+  
+  return await container.fetch(newRequest);
 });
 
-// Demonstrate error handling - this route forces a panic in the container
-app.get("/error", async (c) => {
-  const container = getContainer(c.env.MY_CONTAINER, "error-test");
-  return await container.fetch(c.req.raw);
-});
-
-// Load balance requests across multiple containers
-app.get("/lb", async (c) => {
-  const container = await loadBalance(c.env.MY_CONTAINER, 3);
-  return await container.fetch(c.req.raw);
-});
-
-// Get a single container instance (singleton pattern)
-app.get("/singleton", async (c) => {
-  const container = getContainer(c.env.MY_CONTAINER);
-  return await container.fetch(c.req.raw);
+// Alternative: Single WordPress instance at /wp
+app.all("/wp/*", async (c) => {
+  const container = getContainer(c.env.MY_CONTAINER, "main");
+  
+  // Get the path after /wp
+  const path = c.req.path.replace('/wp', '') || '/';
+  
+  // Create a new request with the correct path for WordPress
+  const url = new URL(c.req.url);
+  url.pathname = path;
+  
+  const newRequest = new Request(url.toString(), {
+    method: c.req.method,
+    headers: c.req.raw.headers,
+    body: c.req.raw.body,
+  });
+  
+  return await container.fetch(newRequest);
 });
 
 export default app;

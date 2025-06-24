@@ -4,7 +4,7 @@ FROM wordpress:latest
 
 # Install SQLite3 and required PHP extensions
 RUN apt-get update && \
-    apt-get install -y sqlite3 && \
+    apt-get install -y sqlite3 libsqlite3-dev unzip && \
     docker-php-ext-install pdo_sqlite && \
     rm -rf /var/lib/apt/lists/*
 

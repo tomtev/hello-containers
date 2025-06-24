@@ -12,12 +12,6 @@ RUN apt-get update && \
     a2enmod rewrite && \
     rm -rf /var/lib/apt/lists/*
 
-# Optimize Apache for container environment
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
-    echo "HostnameLookups Off" >> /etc/apache2/apache2.conf && \
-    echo "KeepAlive Off" >> /etc/apache2/apache2.conf && \
-    a2dismod -f status
-
 # Download and extract WordPress
 RUN curl -o wordpress.tar.gz -fL "https://wordpress.org/latest.tar.gz" && \
     tar -xzf wordpress.tar.gz -C /var/www/ && \
@@ -63,11 +57,6 @@ define('LOGGED_IN_SALT',   'put-your-unique-phrase-here'); \
 define('NONCE_SALT',       'put-your-unique-phrase-here'); \
 \$table_prefix = 'wp_'; \
 define('WP_DEBUG', false); \
-/* Performance optimizations for container environment */ \
-define('COMPRESS_CSS', true); \
-define('COMPRESS_SCRIPTS', true); \
-define('CONCATENATE_SCRIPTS', true); \
-define('ENFORCE_GZIP', true); \
 /* Handle reverse proxy */ \
 if (!empty(\$_SERVER['HTTP_X_FORWARDED_HOST'])) { \
     \$_SERVER['HTTP_HOST'] = \$_SERVER['HTTP_X_FORWARDED_HOST']; \

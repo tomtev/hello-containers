@@ -4,17 +4,12 @@ import { Hono } from "hono";
 export class MyContainer extends Container {
   // Port the container listens on (default: 8080)
   defaultPort = 8080;
-  // Time before container sleeps due to inactivity
-  // Increase this for production to avoid frequent restarts
-  sleepAfter = "30m";
+  // Time before container sleeps due to inactivity (default: 30s)
+  sleepAfter = "5m";
   // Environment variables passed to the container
   envVars = {
     MESSAGE: "WordPress with SQLite",
   };
-  
-  // Increase instance resources for better performance
-  // Use "standard" for production workloads
-  instanceType = "standard" as const;
 
   // Optional lifecycle hooks
   override onStart() {

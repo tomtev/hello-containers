@@ -12,7 +12,8 @@
       "class_name": "MyContainer",
       "image": "./Dockerfile",
       "max_instances": 10,
-      "name": "hello-containers"
+      "name": "hello-containers",
+      "instance_type": "standard"
     }
   ],
   "durable_objects": {
